@@ -12,21 +12,22 @@ def check_file(path) -> bool:
 			return True
 	return False
 
-def write_in_ascii(r, g, b):
-	brightness = 0.2126 * r + 0.7152 * g + 0.0722 * b
-	index = int((brightness / 255) * 4)
-	final_img.write(ascii_arr[index])
-
-
-
-
 def turn_to_ascii(img):
 	any = img.convert('RGB')
 	width, height = any.size
-	for x in range(width):
-		for y in range(height):
-			r,g,b = any.getpixel((x, y))
-			write_in_ascii(r, g, b)
+	it = (width / 10) * (height / 10)
+	brightness = 0
+	while (it > 0):
+		for x in range(int(width / it)):
+			for y in range(int(height / it)):
+				r,g,b = any.getpixel((x, y))
+				brightness += 0.2126 * r + 0.7152 * g + 0.0722 * b
+		brightness /= ((width / it) * (height / it))
+		index = int((brightness / 255) * 4)
+		if (width / it == 1):
+			final_img.write('\n')
+		final_img.write(ascii_arr[index])
+		it -= 1
 
 if __name__ == "__main__":
 	# print(dir(Image))
