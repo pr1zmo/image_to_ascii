@@ -1,16 +1,16 @@
 from PIL import Image, ImageOps
 import cv2, os
 import numpy as np
+from tqdm import tqdm
 
 _ext = [".png", ".jpg", ".jpeg"]
 ascii_arr = ['-', '*', '^', '#', '@', '=']
-final_img = open("ascii", 'w+')
 width, height = 1280, 1280
 ascii_width, ascii_height = 10, 20
 
 def check_file(path) -> bool:
 	if (os.path.exists(path)):
-		if (path[5:] in _ext):
+		if (path[-5:] in _ext or path[-4:]):
 			return True
 	return False
 
@@ -24,46 +24,61 @@ def turn_to_ascii(img):
 	img = scale(img)
 	fin_arr = []
 
-	for by in range(0, height, ascii_height):
-		for bx in range(0, width, ascii_width):
-			bri_sum = 0
-			pixels_in_block = 0
+	"""
+		with tqdm(total=thread_operations, desc="Drawing threads", unit="lines") as pbar:
+		for z in range(thread_operations):
+			pbar.set_postfix({"status": "drawing"})
+			i = random.randint(0, nails - 1)
+			j = random.randint(0, nails - 1)
+			x1, y1 = nail_pos[i]
+			x2, y2 = nail_pos[j]
+			draw_line((255, 255, 255), x1, y1, x2, y2, img)
+			pbar.update(1)
+	"""
 
-			for y in range(ascii_height):
-				for x in range(ascii_width):
-					iy = by + y
-					ix = bx + x
-					if iy >= height or ix >= width:
-						continue
+	with tqdm(total=height*width, desc="averaging pixels", unit="pixels") as pbar:
+		for by in range(0, height, ascii_height):
+			for bx in range(0, width, ascii_width):
+				pbar.set_postfix({"status": "drawing"})
+				bri_sum = 0
+				pixels_in_block = 0
 
-					pixel = img[iy, ix]
-					brightness = int(
-						0.299 * pixel[0]
-						+ 0.587 * pixel[1]
-						+ 0.114 * pixel[2]
-					)
-					bri_sum += brightness
-					pixels_in_block += 1
+				for y in range(ascii_height):
+					for x in range(ascii_width):
+						iy = by + y
+						ix = bx + x
+						if iy >= height or ix >= width:
+							continue
 
-			if pixels_in_block == 0:
-				avg_brightness = 0
-			else:
-				avg_brightness = bri_sum // pixels_in_block
+						pixel = img[iy, ix]
+						brightness = int(
+							0.299 * pixel[0]
+							+ 0.587 * pixel[1]
+							+ 0.114 * pixel[2]
+						)
+						bri_sum += brightness
+						pixels_in_block += 1
 
-			idx = int(avg_brightness / 256 * len(ascii_arr))
-			if idx == len(ascii_arr):
-				idx -= 1
-			ch = ascii_arr[idx]
-			fin_arr.append(ch)
+				if pixels_in_block == 0:
+					avg_brightness = 0
+				else:
+					avg_brightness = bri_sum // pixels_in_block
 
-			block_value = avg_brightness
-			for y in range(ascii_height):
-				for x in range(ascii_width):
-					iy = by + y
-					ix = bx + x
-					if iy >= height or ix >= width:
-						continue
-					res[iy, ix] = (block_value, block_value, block_value)
+				idx = int(avg_brightness / 256 * len(ascii_arr))
+				if idx == len(ascii_arr):
+					idx -= 1
+				ch = ascii_arr[idx]
+				fin_arr.append(ch)
+
+				block_value = avg_brightness
+				for y in range(ascii_height):
+					for x in range(ascii_width):
+						iy = by + y
+						ix = bx + x
+						if iy >= height or ix >= width:
+							continue
+						res[iy, ix] = (block_value, block_value, block_value)
+				pbar.update(ascii_height*ascii_width)
 
 	with open("ascii_output.txt", "w") as f:
 		chars_per_line = width // ascii_width
@@ -84,6 +99,5 @@ if __name__ == "__main__":
 	if (check_file(path)):
 		img = Image.open(path)
 		turn_to_ascii(img)
-		final_img.close()
 	else:
 		print("Something went wrong")
