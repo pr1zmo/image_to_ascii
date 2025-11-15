@@ -14,21 +14,10 @@ def check_file(path) -> bool:
 			return True
 	return False
 
-def condition(width, height) -> bool:
-	return True
-
 def scale(pil_img) -> np.ndarray:
 	pil_img = pil_img.convert('RGB')
 	scaled = ImageOps.fit(pil_img, (width, height))
 	return np.array(scaled)
-
-def line_av(arr):
-   pass
-
-def turn_to_ascii(img):
-	res = np.zeros((width, height, 3), np.uint8)
-	img = scale(img)
-	fin_arr = []
 
 def turn_to_ascii(img):
 	res = np.zeros((height, width, 3), np.uint8)
@@ -41,40 +30,40 @@ def turn_to_ascii(img):
 			pixels_in_block = 0
 
 			for y in range(ascii_height):
-					for x in range(ascii_width):
-						iy = by + y
-						ix = bx + x
-						if iy >= height or ix >= width:
-							continue
+				for x in range(ascii_width):
+					iy = by + y
+					ix = bx + x
+					if iy >= height or ix >= width:
+						continue
 
-						pixel = img[iy, ix]
-						brightness = int(
-							0.299 * pixel[0]
-							+ 0.587 * pixel[1]
-							+ 0.114 * pixel[2]
-						)
-						bri_sum += brightness
-						pixels_in_block += 1
+					pixel = img[iy, ix]
+					brightness = int(
+						0.299 * pixel[0]
+						+ 0.587 * pixel[1]
+						+ 0.114 * pixel[2]
+					)
+					bri_sum += brightness
+					pixels_in_block += 1
 
 			if pixels_in_block == 0:
-					avg_brightness = 0
+				avg_brightness = 0
 			else:
-					avg_brightness = bri_sum // pixels_in_block
+				avg_brightness = bri_sum // pixels_in_block
 
 			idx = int(avg_brightness / 256 * len(ascii_arr))
 			if idx == len(ascii_arr):
-					idx -= 1
+				idx -= 1
 			ch = ascii_arr[idx]
 			fin_arr.append(ch)
 
 			block_value = avg_brightness
 			for y in range(ascii_height):
-					for x in range(ascii_width):
-						iy = by + y
-						ix = bx + x
-						if iy >= height or ix >= width:
-							continue
-						res[iy, ix] = (block_value, block_value, block_value)
+				for x in range(ascii_width):
+					iy = by + y
+					ix = bx + x
+					if iy >= height or ix >= width:
+						continue
+					res[iy, ix] = (block_value, block_value, block_value)
 
 	with open("ascii_output.txt", "w") as f:
 		chars_per_line = width // ascii_width
